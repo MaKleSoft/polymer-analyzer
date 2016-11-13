@@ -619,18 +619,18 @@ suite('Analyzer', () => {
           ['import', 'html-import'],
           ['import', 'html-import']
         ]);
-        // const imports = Array.from(document.getByKind('import'));
-        // assert.deepEqual(
-        //     imports.map(m => m.url).sort(),
-        //     ['a.html', 'b.html', 'common.html', 'common.html']);
-        // const docs = Array.from(document.getByKind('document'));
-        // assert.deepEqual(
-        //     docs.map(d => d.url).sort(),
-        //     ['a.html', 'b.html', 'base.html', 'common.html']);
-        // const refs = Array.from(document.getByKind('element-reference'));
-        // assert.deepEqual(refs.map(ref => ref.tagName), ['custom-el']);
+        const imports = Array.from(document.getByKind('import'));
+        assert.deepEqual(
+            imports.map(m => m.url).sort(),
+            ['a.html', 'b.html', 'common.html', 'common.html']);
+        const docs = Array.from(document.getByKind('document'));
+        assert.deepEqual(
+            docs.map(d => d.url).sort(),
+            ['a.html', 'b.html', 'base.html', 'common.html']);
+        const refs = Array.from(document.getByKind('element-reference'));
+        assert.deepEqual(refs.map(ref => ref.tagName), ['custom-el']);
       }
-    });
+    })['timeout'](10000);
 
     suite('deterministic tests', () => {
       // Deterministic tests extracted from various failures of the above random
