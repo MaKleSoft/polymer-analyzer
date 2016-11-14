@@ -554,29 +554,27 @@ suite('Analyzer', () => {
   });
 
   suite('race conditions and caching', () => {
+    const wait = () =>
+        new Promise((resolve) => setTimeout(resolve, Math.random() * 30));
+    class RacyUrlLoader implements UrlLoader {
+      constructor(public map: Map<string, string>) {
+      }
+      canLoad() {
+        return true;
+      }
+      async load(path: string) {
+        await wait();
+        const result = this.map.get(path);
+        if (result != null) {
+          return result;
+        }
+        throw new Error(`no known contents for ${path}`);
+      }
+    }
     test('editor simulator of imports that import a common dep', async() => {
       // Here we're simulating a lot of noop-changes to base.html, which has
       // two imports, which mutually import a common dep. This stresses the
       // analyzer's caching.
-
-      const wait = () =>
-          new Promise((resolve) => setTimeout(resolve, Math.random() * 30));
-      class RacyUrlLoader implements UrlLoader {
-        constructor(public map: Map<string, string>) {
-        }
-        canLoad() {
-          return true;
-        }
-        async load(path: string) {
-          await wait();
-          const result = this.map.get(path);
-          if (result != null) {
-            return result;
-          }
-          throw new Error(`no known contents for ${path}`);
-        }
-      }
-
       const contentsMap = new Map<string, string>([
         [
           'base.html',
