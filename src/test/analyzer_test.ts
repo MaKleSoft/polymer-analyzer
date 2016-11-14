@@ -142,30 +142,6 @@ suite('Analyzer', () => {
               chainedDocument.getWarnings(true), [expectedWarning]);
         });
 
-    // currently passing
-    test('analyzes multiple imports of the same behavior', async() => {
-      const documentA = await analyzer.analyze(
-          'static/multiple-behavior-imports/element-a.html');
-      const documentB = await analyzer.analyze(
-          'static/multiple-behavior-imports/element-b.html');
-      assert.deepEqual(documentA.getWarnings(true), []);
-      assert.deepEqual(documentB.getWarnings(true), []);
-    });
-
-    // currently failing
-    test(
-        'analyzes multiple imports of the same behavior simultaneously',
-        async() => {
-          const result = await Promise.all([
-            analyzer.analyze('static/multiple-behavior-imports/element-a.html'),
-            analyzer.analyze('static/multiple-behavior-imports/element-b.html')
-          ]);
-          const documentA = result[0];
-          const documentB = result[1];
-          assert.deepEqual(documentA.getWarnings(true), []);
-          assert.deepEqual(documentB.getWarnings(true), []);
-        });
-
     test(
         'an inline document can find features from its container document',
         async() => {
@@ -591,6 +567,7 @@ suite('Analyzer', () => {
       for (let i = 0; i < 30; i++) {
         await wait();
         for (const keyValue of contentsMap) {
+          // Randomly edit some files.
           if (Math.random() > 0.5) {
             const p = analyzer.analyze(keyValue[0], keyValue[1]);
             const cacheContext = analyzer['_cacheContext'];
@@ -603,10 +580,13 @@ suite('Analyzer', () => {
             })());
           }
         }
+        // Analyze the base file
         promises.push(analyzer.analyze('base.html'));
         await Promise.all(promises);
       }
+      // Assert that all edits went through fine.
       await Promise.all(intermediatePromises);
+      // Assert that the resulting documents after the edits were all fine
       const documents = await Promise.all(promises);
       for (const document of documents) {
         assert.deepEqual(document.url, 'base.html');
@@ -628,7 +608,7 @@ suite('Analyzer', () => {
         const refs = Array.from(document.getByKind('element-reference'));
         assert.deepEqual(refs.map(ref => ref.tagName), ['custom-el']);
       }
-    })['timeout'](10000);
+    });
 
     suite('deterministic tests', () => {
       // Deterministic tests extracted from various failures of the above random
@@ -728,7 +708,7 @@ suite('Analyzer', () => {
         ]);
       });
 
-      test.skip('something about the order of scanning?', async() => {
+      test.skip('WIP something about the order of scanning?', async() => {
         const urlLoader = new DeterministicUrlLoader();
         const scanner = new DeterministicScanner();
         const analyzer =
@@ -756,6 +736,29 @@ suite('Analyzer', () => {
         await Promise.all(promises);
       });
 
+      test('analyzes multiple imports of the same behavior', async() => {
+        const documentA = await analyzer.analyze(
+            'static/multiple-behavior-imports/element-a.html');
+        const documentB = await analyzer.analyze(
+            'static/multiple-behavior-imports/element-b.html');
+        assert.deepEqual(documentA.getWarnings(true), []);
+        assert.deepEqual(documentB.getWarnings(true), []);
+      });
+
+      test(
+          'analyzes multiple imports of the same behavior simultaneously',
+          async() => {
+            const result = await Promise.all([
+              analyzer.analyze(
+                  'static/multiple-behavior-imports/element-a.html'),
+              analyzer.analyze(
+                  'static/multiple-behavior-imports/element-b.html')
+            ]);
+            const documentA = result[0];
+            const documentB = result[1];
+            assert.deepEqual(documentA.getWarnings(true), []);
+            assert.deepEqual(documentB.getWarnings(true), []);
+          });
     });
   });
 });
