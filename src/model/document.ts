@@ -120,6 +120,8 @@ export interface QueryOptionsInterface extends BaseQueryOptions {
    * dependencies. Otherwise it will only include results from the document.
    */
   imported?: boolean;
+  //* If true, the query will return results from lazy imports
+  lazyImports?: boolean;
 }
 
 export type QueryOptions = object & QueryOptionsInterface;
@@ -337,7 +339,10 @@ export class Document implements Feature, Queryable {
         const imprt = feature as Import;
         const isPackageInternal =
             imprt.document && !Package.isExternal(imprt.document.url);
-        if (options.externalPackages || isPackageInternal) {
+        if (
+          options.externalPackages || isPackageInternal &&
+          options.lazyImports || !feature.kinds.has('lazy-html-import')
+        ) {
           imprt.document._getFeatures(result, visited, options);
         }
       }
